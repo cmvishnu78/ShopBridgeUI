@@ -1,0 +1,87 @@
+﻿
+@{
+    ViewBag.Title = "ItemDetails";
+    Layout = "~/Views/Shared/_Layout1.cshtml";
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Shop Bridge</title>
+    <script src="~/Content/JS/jquery-3.2.1.min.js"></script>
+
+    <script type="text/javascript">
+        var ApiUrl = "https://localhost:44319/";
+        $(document).ready(function () {
+            var ID = '@ViewBag.Itemid';
+            FtechItemDetails(ID);
+        });
+
+        function FtechItemDetails(ID) {
+            $.ajax({
+                type: 'GET',
+                crossDomain: true,
+                dataType: 'json',
+                contentType: 'application/json;charset=utf-8',
+                secure: true,
+
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+
+                url: "" + ApiUrl + "InventoryItems/" + ID+"",
+                data: {},
+                success:
+                    function (response) {
+                        
+                        var ObjData = response;
+                        console.log(ObjData);
+                        $('#itemName').text(ObjData[0].item_Name);
+                        $('#itemDescription').text(ObjData[0].item_Description);
+                        $('#itemPrice').text(ObjData[0].item_Price);
+                       
+                        $('#image').prop('src', ObjData[0].imageUrl)
+                    },
+
+                error: function (ex) {
+                    alert('Error');
+                    console.log(ex);
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <div class="container mt-5">
+
+
+
+        <div>
+            <label class="inv-item-details">  Inventory Item Details  </label>
+            <div class="card" style="margin-top: 1rem;">
+                <div class="row card-body">
+                    <div class="col-md-4">
+                        <img src="" id="image" style="width: 100%; height: inherit;" />
+                    </div>
+
+                    <div class="col-md-8">
+                        <p class="font-wg-700"> Name : <span id="itemName" class="font-wg-400"></span></p>
+                        <p class="font-wg-700"> Description : <span id="itemDescription" class="font-wg-400"></span></p>
+                        <p class="font-wg-700"> Price : <span id="itemPrice" class="font-wg-400"></span></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+</body>
+</html>
+

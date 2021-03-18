@@ -1,0 +1,305 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout1.cshtml";
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Shop Bridge</title>
+    <script src="~/Content/JS/jquery-3.2.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10.15.5/dist/sweetalert2.all.min.js"></script>
+    <script type="text/javascript">
+        var ApiUrl = "https://localhost:44319/";
+        var ImageData = "";
+        $(document).ready(function () {
+            CallInventoryitems();
+
+            $('#ImageUplader').change(function () {
+                debugger;
+                var input = this;
+                var url = $(this).val();
+                var ext = url.substring(url.lastIndexOf('.') + 1).toLowerCase();
+                Resumeext = ext;
+
+                var file_size = input.files[0].size;
+                console.log(file_size);
+                if (file_size > 1026736) {
+                    Swal.fire({
+                        title: 'Warning!',
+                        text: 'Please upload below 1 MB File',
+                        icon: 'warning',
+                        confirmButtonText: 'Cool'
+                    });
+                    $('#ImageUplader').val("");
+                    return false;
+                }
+
+
+                if (input.files && input.files[0] && (ext == "jpeg" || ext == "jpg" || ext == "png")) {
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        ImageData = e.target.result;
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                }
+                else {
+                    Swal.fire({
+                        title: 'Warning!',
+                        text: 'Please select .jpeg,.jpg,.png Format',
+                        icon: 'warning',
+                        confirmButtonText: 'Ok'
+                    });
+                    $('#ImageUplader').val("");
+                    return false;
+                }
+
+            });
+
+
+
+        });
+
+        function CallInventoryitems() {
+
+            $.ajax({
+                type: 'GET',
+                crossDomain: true,
+                dataType: 'json',
+                contentType: 'application/json;charset=utf-8',
+                secure: true,
+
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+
+                url: "" + ApiUrl + "InventoryItems",
+                data: {},
+                success:
+                    function (response) {
+
+                        var ObjData = response;
+
+                        CreateGrid(ObjData);
+                    },
+
+                error: function (ex) {
+                    alert('Error');
+                    console.log(ex);
+                }
+            });
+        }
+        function CreateGrid(objdata) {
+            debugger;
+            var table = $('#ItemList');
+            var Str = "<thead> <tr><th></th> <th>Item Name</th> <th>Item Description</th> <th>Item Price</th><th></th> </tr> </thead> <tbody> ";
+            for (var i = 0; i < objdata.length; i++) {
+                Str += '<tr> <td><img src=' + objdata[i].imageUrl + ' class="img-thumbnail img-responsive imgclass" /> </td><td><a href="/InventoryManagement/ItemDetails?ItemID=' + objdata[i].item_Id + '">' + objdata[i].item_Name + '</a></td>';
+                Str += '<td>' + objdata[i].item_Description + '</td><td>' + objdata[i].item_Price + '</td> <td><button type="button" class="btn btn-primary btn-sm rounded-pill btn-danger" onclick="Delete(' + objdata[i].item_Id + ');">Delete</button></td></tr>';
+            }
+            Str += "</tbody>";
+            table.empty();
+            table.append(Str);
+
+
+        }
+        function submitform() {
+            debugger;
+            var Name = $('#txt_itemName').val();
+            var Desc = $('#txt_itemDesc').val();
+            var Price = $('#txt_itemPrice').val();
+            if (Name == "") {
+                Swal.fire({
+                    title: 'Warning!',
+                    text: 'Please Enter Item Name!',
+                    icon: 'warning',
+                    confirmButtonText: 'Ok'
+                });
+                return false;
+            }
+            if (Desc == "") {
+                Swal.fire({
+                    title: 'Warning!',
+                    text: 'Please Enter Item Description!',
+                    icon: 'warning',
+                    confirmButtonText: 'Ok'
+                });
+                return false;
+            }
+            if (Price == "") {
+                Swal.fire({
+                    title: 'Warning!',
+                    text: 'Please Enter Item Price!',
+                    icon: 'warning',
+                    confirmButtonText: 'Ok'
+                });
+                return false;
+            }
+
+            var Param = {};
+            Param.Item_Name = Name;
+            Param.Item_Description = Desc;
+            Param.Item_Price = Price;
+            Param.ImageUrl = ImageData;
+            console.log(Param);
+            $.ajax({
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json;charset=utf-8',
+                url: "" + ApiUrl + "InventoryItems",
+                data: JSON.stringify(Param),
+                success:
+                    function (response) {
+                        CallInventoryitems();
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Item Added to Inventory',
+                            icon: 'success',
+                            confirmButtonText: 'Ok'
+                        });
+                        $('#txt_itemName').val("");
+                        $('#txt_itemDesc').val("");
+                        $('#txt_itemPrice').val("");
+                        $('#ImageUplader').val("");
+                    },
+
+                error: function (ex) {
+                    alert('Error');
+                    console.log(ex);
+                }
+            });
+
+        }
+
+        function Delete(ID) {
+
+            Swal.fire({
+                title: 'Do you want to Delete',
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: `Yes`,
+
+            }).then((result) => {
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'Delete',
+                        crossDomain: true,
+                        dataType: 'json',
+                        contentType: 'application/json;charset=utf-8',
+                        secure: true,
+
+                        headers: {
+                            'Access-Control-Allow-Origin': '*',
+                        },
+
+                        url: "" + ApiUrl + "InventoryItems/" + ID + "",
+                        data: {},
+                        success:
+                            function (response) {
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: 'Item Deleted Successfully!',
+                                    icon: 'success',
+                                    confirmButtonText: 'Ok'
+                                });
+                                CallInventoryitems();
+                            },
+
+                        error: function (ex) {
+                            alert('Error');
+                            console.log(ex);
+                        }
+                    });
+
+
+
+                } else if (result.isDenied) {
+                    Swal.fire('Aborted', '', 'info')
+                }
+            })
+
+
+
+
+
+        }
+
+    </script>
+
+
+</head>
+<body>
+
+    <div class="container mt-5">
+
+        <div id="Component1" class="card">
+            <div class="row" style=" padding: 1rem;">
+                <div class="col-md-12">
+                    <label class="label-primary" style="font-weight: 500; font-size: 1.2rem;"> Add Item to Inventory</label>
+                </div>
+            </div>
+            <hr class="hr-class">
+            <div class="row" style=" padding: 1rem;">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="txt_itemName" class="form-label">Item Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="txt_itemName" placeholder="Item Name">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="txt_itemDesc" class="form-label">Item Description <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="txt_itemDesc" placeholder="Item Description">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="txt_itemPrice" class="form-label">Item Price <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="txt_itemPrice" placeholder="Item Price">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+
+                        <label for="company" class="form-control-label">Upload Image </label>
+                        <div class="input-group input-file" style=" margin-top: 7px;">
+                            <input type="file" class="form-control" id="ImageUplader" placeholder="Choose a file..." style="cursor: pointer;">
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="row" style=" padding: 1rem;">
+                <div class="col-md-12" style="text-align:right">
+                    <button type="button" class="btn btn-primary btn-sm rounded-pill" onclick="submitform();">Submit</button>
+
+
+                </div>
+            </div>
+        </div>
+
+        <div id="Component2" style="margin-top: 3rem;" class="card">
+            <div class="row" style="padding: 1rem 0 0 1rem;">
+                <div class="col-md-12">
+                    <label class="label" style="font-weight: 500; font-size: 1.1rem;">Inventory List</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12" style="padding: 1rem 2rem 0rem 2rem;">
+                    <table id="ItemList" class="table mt-3 table-striped">
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
+
+
